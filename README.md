@@ -3,6 +3,7 @@ FreenetIS CZ addresses database
 
 Requirements
 ------------
+ - unzip
  - PHP 5.2.0
  - MySQL 5.1
 
