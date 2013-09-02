@@ -1,33 +1,65 @@
 #!/bin/bash
 
+#
+# This file is part of open source system FreenetIS
+# and it is released under GPLv3 licence.
+# 
+# More info about licence can be found:
+# http://www.gnu.org/licenses/gpl-3.0.html
+# 
+# More info about project can be found:
+# http://www.freenetis.org/
+# 
+#
+
+
+# init enviroment variable
+
+function style
+{
+#	if [ -n "$TERM" ]
+#	then
+#		tput $1 $2
+#	fi
+}
+
 function print_info
 {
-	echo -e "\n================================================================================"
-	echo -n "== "
-	tput setaf 2
-	tput bold
+	echo -en "== "
+	style bold
+	echo -n $(date '+%D %T')
+	style sgr0
+	echo -n " == "
+	style setaf 2
+	style bold
 	echo $1
-	tput sgr0
-	echo -e "================================================================================\n"
+	style sgr0
+	echo
 }
 
 function print_warning
 {
-	echo -e "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-	echo -n "!! "
-	tput setaf 1
-	tput bold
+	echo -en "!! "
+	style bold
+	echo -n $(date '+%D %T')
+	style sgr0
+	echo -n " !! "
+	style setaf 1
+	style bold
 	echo $1
-	tput sgr0
-	echo -e "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
+	style sgr0
+	echo
 }
 
 function control_c
 {
+	echo -e "\n"
 	print_warning "SIGINT? OKAY :'("
 	rm -rf $directory
 	exit 1
 }
+
+echo "--------------------------------------------------------------------------------"
 
 if [ -r /etc/freenetis-addresses.ini ]
 then
@@ -38,6 +70,7 @@ else
 fi
 
 # do not modify
+country_id=55	# ID of Czech republic
 mysql_table="addresses"
 mysql_table_old=$mysql_table"_old"
 mysql_table_tmp=$mysql_table"_tmp"
@@ -98,7 +131,7 @@ trap control_c SIGINT
 # download address database
 print_info "Downloading address database"
 
-wget http://vdp.cuzk.cz/vymenny_format/csv/$datestamp\_OB_ADR_csv.zip -O $directory/addresses.zip
+wget http://vdp.cuzk.cz/vymenny_format/csv/$datestamp\_OB_ADR_csv.zip -O $directory/addresses.zip 2>/dev/null
 
 if [ $? != 0 ];
 then
@@ -131,11 +164,12 @@ do
 	I=$(($I+1))
 	echo -en "\rPreparing $I of $FILE_NUM: $f"
 
-	#		remove columns				#change encoding					#create number with orientation number													#create number without orientaion number
-	cat $f | cut -s -d ";" -f 3-4,7-13 | iconv -f "WINDOWS-1250" -t "UTF-8" | sed -r 's/;((č\.)(ev\.)){0,1}(č\.p\.){0,1};([0-9]*);([0-9][0-9]*);(.*)/;\3\2\5\/\6\7/g' | sed -r 's/;((č\.)(ev\.)){0,1}(č\.p\.){0,1};([0-9]*);;/;\3\2\5/g' > $f.utf8
+	#		remove columns				#change encoding					#create number with orientation number													#create number without orientaion number							#add country id
+	cat $f | cut -s -d ";" -f 3-4,7-13 | iconv -f "WINDOWS-1250" -t "UTF-8" | sed -r 's/;((č\.)(ev\.)){0,1}(č\.p\.){0,1};([0-9]*);([0-9][0-9]*);(.*)/;\3\2\5\/\6\7/g' | sed -r 's/;((č\.)(ev\.)){0,1}(č\.p\.){0,1};([0-9]*);;/;\3\2\5/g' | sed -r "s/(.*)/$country_id;\1/g" > $f.utf8
 	
 	if [ $? != 0 ];
 	then
+		echo -e "\n"
 		print_warning "Cannot prepare addresses"
 		rm -rf $directory
 		exit 1
@@ -147,11 +181,14 @@ FILES=$directory/CSV/*.utf8
 FILE_NUM=$(ls -1 $FILES | wc -l)
 I=0
 
+echo -e "\n"
 print_info "Importing address database"
+
+mysql $mysql_db -u $mysql_user -p$mysql_pass -h $mysql_server -P $mysql_port --silent -e "TRUNCATE TABLE $mysql_table_tmp"
 
 if [ $? != 0 ];
 then
-	print_warning "Cannot update database"
+	print_warning "Cannot clean temporary table"
 	rm -rf $directory
 	exit 1
 fi
@@ -161,16 +198,18 @@ do
 	I=$(($I+1))
 	echo -en "\rImporting $I of $FILE_NUM: $f "
 
-	mysql $mysql_db -u $mysql_user -p$mysql_pass -h $mysql_server -P $mysql_port -e "LOAD DATA LOCAL INFILE '$f' INTO TABLE $mysql_table_tmp FIELDS TERMINATED BY ';' LINES TERMINATED BY '\n' IGNORE 1 LINES"
+	mysql $mysql_db -u $mysql_user -p$mysql_pass -h $mysql_server -P $mysql_port --local-infile -e "LOAD DATA LOCAL INFILE '$f' INTO TABLE $mysql_table_tmp FIELDS TERMINATED BY ';' LINES TERMINATED BY '\n' IGNORE 1 LINES"
 	
 	if [ $? != 0 ];
 	then
+		echo -e "\n"
 		print_warning "Cannot import addresses"
 		rm -rf $directory
 		exit 1
 	fi
 done
 
+echo -e "\n"
 print_info "Updating database"
 
 mysql $mysql_db -u $mysql_user -p$mysql_pass -h $mysql_server -P $mysql_port --silent -e "RENAME TABLE $mysql_table TO $mysql_table_old; RENAME TABLE $mysql_table_tmp TO $mysql_table; RENAME TABLE $mysql_table_old TO $mysql_table_tmp; REPLACE INTO config VALUES ('datestamp', '$datestamp'); TRUNCATE TABLE $mysql_table_tmp"
