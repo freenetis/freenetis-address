@@ -17,10 +17,10 @@
 
 function style
 {
-#	if [ -n "$TERM" ]
-#	then
-#		tput $1 $2
-#	fi
+	if [[ $cron == FALSE ]]
+	then
+		tput $1 $2
+	fi
 }
 
 function print_info
@@ -60,6 +60,13 @@ function control_c
 }
 
 echo "--------------------------------------------------------------------------------"
+
+if [[ "$1" == "--cron" ]] || [[ "$1" == "-c" ]];
+then
+	cron=TRUE
+else
+	cron=FALSE
+fi
 
 if [ -r /etc/freenetis-addresses.ini ]
 then

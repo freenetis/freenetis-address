@@ -83,7 +83,7 @@ echo "Preparing CRON"
 echo "# /etc/cron.d/freenetis-addresses: Regular CRON file for freenetis-addressses (triggered each day)" > /etc/cron.d/freenetis-addresses
 echo "" >> /etc/cron.d/freenetis-addresses
 echo "SHELL=/bin/bash" >> /etc/cron.d/freenetis-addresses
-echo "00 5 * * *   root    /var/www/freenetis-addresses/import.sh >>\"/var/log/freenetis-addresses.log\" 2>&1" >> /etc/cron.d/freenetis-addresses
+echo "00 5 * * *   root    /var/www/freenetis-addresses/import.sh --cron >>\"/var/log/freenetis-addresses.log\" 2>&1" >> /etc/cron.d/freenetis-addresses
 
 if [ -x /usr/sbin/invoke-rc.d ]; then
 	invoke-rc.d cron restart 3>/dev/null || true
