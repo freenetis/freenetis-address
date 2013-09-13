@@ -85,40 +85,33 @@ mysql_table_tmp=$mysql_table"_tmp"
 # get start tim
 starttime=$(date '+%s')
 
-# if no parameter given, try to get latest database date from web
-if [ $# == 0 ];
+print_info "Trying to get latest database date"
+
+# download web page
+html=$(wget -O - http://nahlizenidokn.cuzk.cz/StahniAdresniMistaRUIAN.aspx 2>/dev/null)
+
+if [ $? != 0 ];
 then
-	print_info "No parameter given - Trying to get latest database date"
+	print_warning "Cannot get latest database date"
+	rm -rf $directory
+	exit 1
+fi
 
-	# download web page
-	html=$(wget -O - http://nahlizenidokn.cuzk.cz/StahniAdresniMistaRUIAN.aspx 2>/dev/null)
+# read date from html source
+datestamp=$(echo $html | sed -nre "s/.*([0-9]{8})_OB_ADR_csv\.zip.*/\1/p")
 
-	if [ $? != 0 ];
-	then
-		print_warning "Cannot get latest database date"
-		rm -rf $directory
-		exit 1
-	fi
-
-	# read date from html source
-	datestamp=$(echo $html | sed -nre "s/.*([0-9]{8})_OB_ADR_csv\.zip.*/\1/p")
-
-	if [ $? != 0 ];
-	then
-		print_warning "Cannot get latest database date"
-		rm -rf $directory
-		exit 1
-	fi
-else
-	# get date from parameter
-	datestamp=$1
+if [ $? != 0 ];
+then
+	print_warning "Cannot get latest database date"
+	rm -rf $directory
+	exit 1
 fi
 
 db_datestamp=$(mysql $mysql_db -u $mysql_user -p$mysql_pass -h $mysql_server -P $mysql_port --silent -e "SELECT value FROM config WHERE name LIKE 'datestamp'")
 
 if [ -n "$db_datestamp" ];
 then
-	if [ $db_datestamp -ge $datestamp ];
+	if [ "$db_datestamp" -ge "$datestamp" ];
 	then
 		print_info "Database is up to date"
 		exit 0
