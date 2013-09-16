@@ -179,11 +179,11 @@ else
 		}
 
 		$query = "
-			SELECT DISTINCT district_name, town_name, town_quarter, zip_code
+			SELECT DISTINCT district_name, town_name, zip_code
 			FROM ".mysql_table."
 			WHERE district_name LIKE '".mysql_real_escape_string($district)."%'
 			$where
-			GROUP BY zip_code
+			GROUP BY district_name
 			LIMIT 0,15";
 	}
 	else if (!empty($town))
@@ -195,14 +195,14 @@ else
 		}
 		
 		$query = "
-			SELECT DISTINCT town_name, district_name, town_quarter, zip_code,
+			SELECT DISTINCT town_name, district_name, zip_code,
 				IF (town_name LIKE district_name, 1, 0) AS same
 			FROM ".mysql_table."
 			WHERE town_name LIKE '".mysql_real_escape_string($town)."%'
 				AND zip_code NOT LIKE ''
 			$where
-			GROUP BY zip_code, district_name
-			ORDER BY same DESC, district_name ASC
+			GROUP BY district_name
+			ORDER BY town_name ASC, same DESC, district_name ASC
 			LIMIT 0,15";
 	}
 
