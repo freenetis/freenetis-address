@@ -120,7 +120,7 @@ else
 {
 	$where = '';
 	
-	if (!empty($street))
+	if ($street !== NULL)
 	{
 		// find number
 		$select = 'town_name, street, district_name';
@@ -152,6 +152,10 @@ else
 		{
 			$where = "$where AND district_name LIKE '".mysql_real_escape_string($district)."%'";
 		}
+		else
+		{
+			$where = "$where AND district_name LIKE '".mysql_real_escape_string($town)."%'";
+		}
 		
 		if (!empty($country))
 		{
@@ -166,11 +170,11 @@ else
 			$where
 			LIMIT 0,15";
 	}
-	else if (!empty ($district))
+	else if ($district !== NULL)
 	{
 		if (!empty($town))
 		{
-			$where = "$where AND town_name LIKE '".mysql_real_escape_string($town)."%'";
+			$where = "$where AND town_name LIKE '".mysql_real_escape_string($town)."'";
 		}
 		
 		if (!empty($country))
@@ -183,10 +187,11 @@ else
 			FROM ".mysql_table."
 			WHERE district_name LIKE '".mysql_real_escape_string($district)."%'
 			$where
+			AND district_name NOT LIKE town_name
 			GROUP BY district_name
 			LIMIT 0,15";
 	}
-	else if (!empty($town))
+	else if ($town !== NULL)
 	{
 		
 		if (!empty($country))
@@ -195,14 +200,18 @@ else
 		}
 		
 		$query = "
-			SELECT DISTINCT town_name, district_name, zip_code,
-				IF (town_name LIKE district_name, 1, 0) AS same
-			FROM ".mysql_table."
-			WHERE town_name LIKE '".mysql_real_escape_string($town)."%'
-				AND zip_code NOT LIKE ''
-			$where
-			GROUP BY district_name
-			ORDER BY town_name ASC, same DESC, district_name ASC
+			SELECT town_name, COUNT(district_name) as district_count
+			FROM
+			(
+				SELECT town_name, district_name
+				FROM ".mysql_table."
+				WHERE town_name LIKE '".mysql_real_escape_string($town)."%'
+					AND zip_code NOT LIKE ''
+				$where
+				GROUP BY town_name, district_name
+				ORDER BY town_name ASC
+			) q
+			GROUP BY town_name
 			LIMIT 0,15";
 	}
 
