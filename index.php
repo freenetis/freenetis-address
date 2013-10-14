@@ -54,7 +54,12 @@ else if ($mode == 'validate')
 	{
 		// find number
 		$where = '';
-
+		
+		if (empty($district))
+		{
+			$district = $town;
+		}
+		
 		$match = array();
 		if (preg_match('((ev\.č\.)?[0-9][0-9]*(/[0-9][0-9]*[a-zA-Z]*)*)', $street, $match))
 		{
