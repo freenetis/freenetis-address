@@ -10,6 +10,8 @@
  * 
  */
 
+CREATE DATABASE `addresses` DEFAULT CHARACTER SET utf8 COLLATE utf8_czech_ci;
+
 CREATE TABLE IF NOT EXISTS `addresses` (
   `country` int(11) NOT NULL,
   `town_name` varchar(50) COLLATE utf8_czech_ci NOT NULL,

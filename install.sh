@@ -19,57 +19,70 @@ if [ "$(id -u)" != "0" ]; then
    exit 1
 fi
 
-# get user name
-while [ true ]
-do
-	read -p "DB user name: " user
-	
-	if [ -n "$user" ]
+
+if [[ "$1" == "-u" ]];
+then
+	echo "Uninstalling"
+	rm -rf /var/www/freenetis-addresses
+	rm -f /etc/freenetis-addresses.ini
+	exit 1
+fi
+
+if [ ! -r /etc/freenetis-addresses.ini ]
+then
+	# get user name
+	while [ true ]
+	do
+		read -p "DB user name: " user
+
+		if [ -n "$user" ]
+		then
+			break
+		fi
+	done
+
+	# get password
+	read -sp "DB user password: " pass
+	echo
+
+	# get server
+	read -p "DB server (default localhost): " server
+
+	if [ -z "$server" ]
 	then
-		break
+		server="localhost"
 	fi
-done
 
-# get password
-read -sp "DB user password: " pass
-echo
+	# get port
+	read -p "DB port (default 3306): " port
 
-# get server
-read -p "DB server (default localhost): " server
-	
-if [ -z "$server" ]
-then
-	server="localhost"
+	if [ -z "$port" ]
+	then
+		port="3306"
+	fi
+
+	# get database
+	read -p "DB database (default addresses): " db
+
+	if [ -z "$db" ]
+	then
+		db="addresses"
+	fi
+
+	echo "Saving configuration"
+
+	# save configuration
+	echo mysql_user=$user > /etc/freenetis-addresses.ini
+	echo mysql_pass=$pass >> /etc/freenetis-addresses.ini
+	echo mysql_server=$server >> /etc/freenetis-addresses.ini
+	echo mysql_port=$port >> /etc/freenetis-addresses.ini
+	echo mysql_db=$db >> /etc/freenetis-addresses.ini
 fi
-
-# get port
-read -p "DB port (default 3306): " port
-	
-if [ -z "$port" ]
-then
-	port="3306"
-fi
-
-# get database
-read -p "DB database (default addresses): " db
-	
-if [ -z "$db" ]
-then
-	db="addresses"
-fi
-
-echo "Saving configuration"
-
-# save configuration
-echo mysql_user=$user > /etc/freenetis-addresses.ini
-echo mysql_pass=$pass >> /etc/freenetis-addresses.ini
-echo mysql_server=$server >> /etc/freenetis-addresses.ini
-echo mysql_port=$port >> /etc/freenetis-addresses.ini
-echo mysql_db=$db >> /etc/freenetis-addresses.ini
 
 echo "Installing"
 
 # install
+rm -rf /var/www/freenetis-addresses
 mkdir /var/www/freenetis-addresses
 
 cp ./index.php /var/www/freenetis-addresses/
