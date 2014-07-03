@@ -14,3 +14,7 @@ Installation
  - Create database structure using db_structure.sql script
  - Run install.sh under root user
  - Run /var/www/freenetis-addresses/import.sh under root user for first time database update
+
+Changelog
+---------
+Changelog in debian format is available [here](changelog).
