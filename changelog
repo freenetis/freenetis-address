@@ -1,3 +1,10 @@
+freenetis-address (1.1.0) stable; urgency=low
+  * FOR UPGRADE INTORMATIONS READ README.md FIRST
+  * Progress of preparing and importing is not printed in CRON mode
+  * Server now return GPS position of address point
+  * Server now searches in both town district and town qurters
+ -- David Raska <jeffraska@gmail.com> Thu, 11 Sep 2014 16:00:00 +0200
+
 freenetis-address (0.1.0) stable; urgency=low
   * First release
  -- David Raska <jeffraska@gmail.com> Thu, 03 Jul 2014 08:00:00 +0200

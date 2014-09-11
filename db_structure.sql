@@ -12,6 +12,8 @@
 
 CREATE DATABASE `addresses` DEFAULT CHARACTER SET utf8 COLLATE utf8_czech_ci;
 
+USE `addresses`; 
+
 CREATE TABLE IF NOT EXISTS `addresses` (
   `country` int(11) NOT NULL,
   `town_name` varchar(50) COLLATE utf8_czech_ci NOT NULL,
@@ -20,6 +22,8 @@ CREATE TABLE IF NOT EXISTS `addresses` (
   `street` varchar(50) COLLATE utf8_czech_ci NOT NULL,
   `number` varchar(15) COLLATE utf8_czech_ci NOT NULL,
   `zip_code` varchar(10) COLLATE utf8_czech_ci NOT NULL,
+  `jstk_y` varchar(15) COLLATE utf8_czech_ci NOT NULL,
+  `jstk_x` varchar(15) COLLATE utf8_czech_ci NOT NULL,
   UNIQUE KEY `FULLTEXT` (`town_name`,`town_quarter`,`district_name`,`street`,`number`,`zip_code`,`country`),
   KEY `country` (`country`),
   FULLTEXT KEY `town_name` (`town_name`),
@@ -38,6 +42,8 @@ CREATE TABLE IF NOT EXISTS `addresses_tmp` (
   `street` varchar(50) COLLATE utf8_czech_ci NOT NULL,
   `number` varchar(15) COLLATE utf8_czech_ci NOT NULL,
   `zip_code` varchar(10) COLLATE utf8_czech_ci NOT NULL,
+  `jstk_y` varchar(15) COLLATE utf8_czech_ci NOT NULL,
+  `jstk_x` varchar(15) COLLATE utf8_czech_ci NOT NULL,
   UNIQUE KEY `FULLTEXT` (`town_name`,`town_quarter`,`district_name`,`street`,`number`,`zip_code`,`country`),
   KEY `country` (`country`),
   FULLTEXT KEY `town_name` (`town_name`),

@@ -162,15 +162,18 @@ I=0
 for f in $FILES
 do
 	I=$(($I+1))
-	echo -en "\rPreparing $I of $FILE_NUM: $f"
+	if [[ $cron == FALSE ]]
+	then
+		echo -en "\rPreparing $I of $FILE_NUM: $f"
+	fi
 
 	#		remove columns				#change encoding					#create number with orientation number													#create number without orientaion number							#add country id
-	cat $f | cut -s -d ";" -f 3-4,7-13 | iconv -f "WINDOWS-1250" -t "UTF-8" | sed -r 's/;((č\.)(ev\.)){0,1}(č\.p\.){0,1};([0-9]*);([0-9][0-9]*);(.*)/;\3\2\5\/\6\7/g' | sed -r 's/;((č\.)(ev\.)){0,1}(č\.p\.){0,1};([0-9]*);;/;\3\2\5/g' | sed -r "s/(.*)/$country_id;\1/g" > $f.utf8
+	cat $f | cut -s -d ";" -f 3-4,7-15 | iconv -f "WINDOWS-1250" -t "UTF-8" | sed -r 's/;(((č\.)(ev\.))|(č\.p\.));([0-9]*);([0-9][0-9]*);(.*)/;\4\3\6\/\7\8/g' | sed -r 's/;(((č\.)(ev\.))|(č\.p\.));([0-9]*);;/;\4\3\6/g' | sed -r "s/(.*)/$country_id;\1/g" > $f.utf8
 	
 	if [ $? != 0 ];
 	then
 		echo -e "\n"
-		print_warning "Cannot prepare addresses"
+		print_warning "Cannot prepare addresses - $I of $FILE_NUM: $f"
 		rm -rf $directory
 		exit 1
 	fi
@@ -196,14 +199,17 @@ fi
 for f in $FILES
 do
 	I=$(($I+1))
-	echo -en "\rImporting $I of $FILE_NUM: $f "
+	if [[ $cron == FALSE ]]
+	then
+		echo -en "\rImporting $I of $FILE_NUM: $f"
+	fi
 
 	mysql $mysql_db -u $mysql_user -p$mysql_pass -h $mysql_server -P $mysql_port --local-infile -e "LOAD DATA LOCAL INFILE '$f' INTO TABLE $mysql_table_tmp FIELDS TERMINATED BY ';' LINES TERMINATED BY '\n' IGNORE 1 LINES"
 	
 	if [ $? != 0 ];
 	then
 		echo -e "\n"
-		print_warning "Cannot import addresses"
+		print_warning "Cannot import addresses - $I of $FILE_NUM: $f"
 		rm -rf $directory
 		exit 1
 	fi
