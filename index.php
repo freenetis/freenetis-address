@@ -135,6 +135,8 @@ define("mysql_db", $config['mysql_db']);
 // do not modify
 define("mysql_table", 'addresses');
 
+const STREET_NUMBER_MATCH_REGEX = '/((ev\.č\.)?[1-9][0-9]*(\/[1-9][0-9]*[a-zA-Z]*)*)$/m';
+
 set_time_limit(1);
 
 // get searched address
@@ -174,9 +176,9 @@ else if ($mode == 'validate')
 		}
 		
 		$match = array();
-		if (preg_match('/((ev\.č\.)?[0-9][0-9]*(\/[0-9][0-9]*[a-zA-Z]*)*)$/m', $street, $match))
+		if (preg_match(STREET_NUMBER_MATCH_REGEX, $street, $match))
 		{
-			$street = preg_replace('/ ((ev\.č\.)?[0-9][0-9]*(\/[0-9][0-9]*[a-zA-Z]*)*)$/m', '', $street);
+			$street = trim(preg_replace(STREET_NUMBER_MATCH_REGEX, '', $street));
 			
 			// prepare query
 			$query = "
@@ -235,10 +237,18 @@ else
 		$orderby = '';
 
 		$match = array();
-		if (preg_match('/((ev\.č\.)?[0-9][0-9]*(\/[0-9][0-9]*[a-zA-Z]*)*)$/m', $street, $match))
+		
+		if (preg_match(STREET_NUMBER_MATCH_REGEX, $street, $match))
 		{
-			$street = preg_replace('/ ((ev\.č\.)?[0-9][0-9]*(\/[0-9][0-9]*[a-zA-Z]*)*)$/m', '', $street);
-			$where = "AND number LIKE '".mysql_real_escape_string($match[0])."%'";
+			$street = trim(preg_replace(STREET_NUMBER_MATCH_REGEX, '', $street));
+			if ($mode == 'gps')
+			{
+				$where = "AND number LIKE '".mysql_real_escape_string($match[0])."'";
+			}
+			else
+			{
+				$where = "AND number LIKE '".mysql_real_escape_string($match[0])."%'";
+			}
 			$select = '*';
 			$orderby = "ORDER BY IF (number LIKE '".mysql_real_escape_string($match[0])."', 0, 1), number";
 		}
